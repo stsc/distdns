@@ -1,0 +1,48 @@
+=head1 NAME
+
+distdns - Distribute hostnames between clients
+
+=head1 SYNOPSIS
+
+ ./client.pl [options]
+
+=head1 DESCRIPTION
+
+The distdns scripts originated as an alternative to established dynamic DNS services.
+
+It features basically two scripts: client-side F<client.pl> and server-side F<server.cgi>.
+The client sends (once configured) personal network/computer/user name data to the server
+which stores it as JSON if access is granted and data is complete.
+
+When F<client.pl> is invoked (preferably by a scheduler, for example: cronjob), it also
+receives hostnames with according IP addresses which are written to a matching network
+marker within the hosts file.  This allows then to use these hostnames to connect to
+machines.
+
+=head1 OPTIONS
+
+ -d, --debug    server debugging
+ -h, --help     this help screen
+ -i, --init     initialize session data
+
+=over 4
+
+=item * C<-d, --debug>
+
+Enable "server debugging" in order to communicate fatal errors back to the client script.
+
+=item * C<-h, --help>
+
+Show usage screen.
+
+=item * C<-i, --init>
+
+Initialize session data prior to using client/server script regularly.
+
+=back
+
+=head1 AUTHORS
+
+Michel Ketterle, Steven Schubiger
+
+=cut
