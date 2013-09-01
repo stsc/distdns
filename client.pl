@@ -79,14 +79,14 @@ my $save_session = sub
 {
     my ($session) = @_;
 
-    open(my $fh, '>', $session_file) or die "Cannot open client-side $session_file for writing: $!\n";
+    open(my $fh, '>', $session_file) or die "$0: Cannot open client-side $session_file for writing: $!\n";
     print {$fh} "$session\n";
     close($fh);
 };
 
 my $get_session = sub
 {
-    open(my $fh, '<', $session_file) or die "Cannot open client-side $session_file for reading: $!\nPerhaps try running --init\n";
+    open(my $fh, '<', $session_file) or die "$0: Cannot open client-side $session_file for reading: $!\nPerhaps try running --init\n";
     my $session = do { local $/; <$fh> };
     chomp $session;
     close($fh);
