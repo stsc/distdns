@@ -24,27 +24,17 @@ use constant false => 0;
 use Config::Tiny;
 use Digest::MD5 qw(md5_hex);
 use Fcntl ':flock';
-use File::Spec::Functions qw(rel2abs);
+use File::Spec::Functions qw(catfile rel2abs);
+use FindBin qw($Bin);
 use Getopt::Long qw(:config no_auto_abbrev no_ignore_case);
 use JSON qw(decode_json);
 use LWP::UserAgent;
 use Sys::Hostname qw(hostname);
 use Tie::File;
 
-my $VERSION = '0.04';
+my $VERSION = '0.05';
 
-#-----------------------
-# Start of configuration
-#-----------------------
-
-my $config_file  = 'dynuser.conf';
-my $hosts_file   = 'hosts';
-my $session_file = 'session.dat';
-my $server_url   = 'http://refcnt.org/~sts/cgi-bin/ketterle/server.cgi';
-
-#---------------------
-# End of configuration
-#---------------------
+my $conf_file = catfile($Bin, 'client.conf');
 
 sub usage
 {
@@ -61,9 +51,29 @@ my %opts;
 GetOptions(\%opts, qw(d|debug h|help i|init)) or usage();
 usage() if $opts{h};
 
-$config_file  = rel2abs($config_file);
-$hosts_file   = rel2abs($hosts_file);
-$session_file = rel2abs($session_file);
+my $config = Config::Tiny->new;
+   $config = Config::Tiny->read($conf_file);
+
+my $get_config_opts = sub
+{
+    my ($section, $options) = @_;
+
+    die "$0: Section $section missing in $conf_file\n" unless exists $config->{$section};
+
+    my %options;
+    @options{@$options} = @{$config->{$section}}{@$options};
+
+    foreach my $option (@$options) {
+        die "$0: Option $option not set in $conf_file\n" unless defined $options{$option} && length $options{$option};
+    }
+
+    return @options{@$options};
+};
+
+my ($hosts_file, $session_file) = map rel2abs($_, $Bin), $get_config_opts->('path', [ qw(hosts_file session_file) ]);
+
+my ($server_url)  = $get_config_opts->('url',  [ qw(server_url) ]);
+my ($netz, $name) = $get_config_opts->('data', [ qw(netz name)  ]);
 
 my $save_session = sub
 {
@@ -85,13 +95,6 @@ my $get_session = sub
 };
 
 my $session = $opts{i} ? substr(md5_hex(md5_hex(time() . {} . rand() . $$)), 0, 32) : $get_session->();
-
-my $config = Config::Tiny->new;
-   $config = Config::Tiny->read($config_file);
-
-my ($netz, $name) = @{$config->{data}}{qw(netz name)};
-
-die "$0: Network and/or name not set in $config_file\n" unless defined $netz && defined $name;
 
 my %params = (
     netz    => $netz,

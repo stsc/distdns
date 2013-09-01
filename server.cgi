@@ -19,23 +19,18 @@
 
 use strict;
 use warnings;
+use lib qw(lib);
 
 use CGI ();
+use Config::Tiny ();
 use Fcntl ':flock';
+use File::Spec::Functions qw(catfile rel2abs);
+use FindBin qw($Bin);
 use JSON qw(decode_json encode_json);
 
-my $VERSION = '0.04';
+my $VERSION = '0.05';
 
-#-----------------------
-# Start of configuration
-#-----------------------
-
-my $json_file    = 'data.json';
-my $session_file = 'session.dat';
-
-#---------------------
-# End of configuration
-#---------------------
+my $conf_file = catfile($Bin, 'server.conf');
 
 my $query = CGI->new;
 
@@ -55,6 +50,24 @@ if ($params{debug}) {
         exit;
     };
 }
+
+my $config = Config::Tiny->new;
+   $config = Config::Tiny->read($conf_file);
+
+my $section = 'path';
+
+die "Section $section missing in $conf_file\n" unless exists $config->{$section};
+
+my @options = qw(json_file session_file);
+
+my %options;
+@options{@options} = @{$config->{$section}}{@options};
+
+foreach my $option (@options) {
+    die "Option $option not set in $conf_file\n" unless defined $options{$option} && length $options{$option};
+}
+
+my ($json_file, $session_file) = map rel2abs($options{$_}, $Bin), @options;
 
 if ($params{init}) {
     die "Delete server-side $session_file first\n" if -e $session_file;
