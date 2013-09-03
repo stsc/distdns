@@ -36,6 +36,8 @@ my $VERSION = '0.05';
 
 my $conf_file = catfile($Bin, 'client.conf');
 
+sub _die { die "$0: [client] $_[0]" }
+
 sub usage
 {
     print <<"USAGE";
@@ -58,13 +60,13 @@ my $get_config_opts = sub
 {
     my ($section, $options) = @_;
 
-    die "$0: Section $section missing in $conf_file\n" unless exists $config->{$section};
+    _die "Section $section missing in $conf_file\n" unless exists $config->{$section};
 
     my %options;
     @options{@$options} = @{$config->{$section}}{@$options};
 
     foreach my $option (@$options) {
-        die "$0: Option $option not set in $conf_file\n" unless defined $options{$option} && length $options{$option};
+        _die "Option $option not set in $conf_file\n" unless defined $options{$option} && length $options{$option};
     }
 
     return @options{@$options};
@@ -79,14 +81,14 @@ my $save_session = sub
 {
     my ($session) = @_;
 
-    open(my $fh, '>', $session_file) or die "$0: Cannot open client-side $session_file for writing: $!\n";
+    open(my $fh, '>', $session_file) or _die "Cannot open $session_file for writing: $!\n";
     print {$fh} "$session\n";
     close($fh);
 };
 
 my $get_session = sub
 {
-    open(my $fh, '<', $session_file) or die "$0: Cannot open client-side $session_file for reading: $!\nPerhaps try running --init\n";
+    open(my $fh, '<', $session_file) or _die "Cannot open $session_file for reading: $!\nPerhaps try running --init\n";
     my $session = do { local $/; <$fh> };
     chomp $session;
     close($fh);
@@ -116,7 +118,7 @@ if ($response->is_success) {
         $data = decode_json($response->decoded_content);
     } or exit;
 
-    die "$0: $data->{error}" if defined $data->{error};
+    die "$0: [server] $data->{error}" if defined $data->{error};
 
     $save_session->($session) if $opts{i};
 
@@ -126,7 +128,7 @@ if ($response->is_success) {
         push @{$list{$entry->{netz}}}, $host;
     }
 
-    my $o = tie my @hosts, 'Tie::File', $hosts_file or die "$0: Cannot tie $hosts_file: $!\n";
+    my $o = tie my @hosts, 'Tie::File', $hosts_file or _die "Cannot tie $hosts_file: $!\n";
     $o->flock(LOCK_EX);
 
     foreach my $network (keys %list) {

@@ -70,14 +70,14 @@ foreach my $option (@options) {
 my ($json_file, $session_file) = map rel2abs($options{$_}, $Bin), @options;
 
 if ($params{init}) {
-    die "Delete server-side $session_file first\n" if -e $session_file;
+    die "Delete $session_file first\n" if -e $session_file;
 
-    open(my $fh, '>', $session_file) or die "Cannot open server-side $session_file for writing: $!\n";
+    open(my $fh, '>', $session_file) or die "Cannot open $session_file for writing: $!\n";
     print {$fh} "$params{session}\n";
     close($fh);
 }
 else {
-    open(my $fh, '<', $session_file) or die "Cannot open server-side $session_file for reading: $!\nPerhaps try running --init\n";
+    open(my $fh, '<', $session_file) or die "Cannot open $session_file for reading: $!\nPerhaps try running --init\n";
     my $session = do { local $/; <$fh> };
     chomp $session;
     close($fh);
