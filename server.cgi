@@ -28,7 +28,7 @@ use File::Spec::Functions qw(catfile rel2abs);
 use FindBin qw($Bin);
 use JSON qw(decode_json encode_json);
 
-my $VERSION = '0.05';
+my $VERSION = '0.06';
 
 my $conf_file = catfile($Bin, 'server.conf');
 
@@ -49,6 +49,12 @@ if ($params{debug}) {
         print encode_json({ entries => [], error => $_[0] });
         exit;
     };
+}
+
+my @missing_params = grep { not defined $params{$_} && length $params{$_} } @params;
+if (@missing_params) {
+    my $missing_params = join ', ', map "'$_'", @missing_params;
+    die "Incomplete query: param(s) $missing_params missing or not defined\n";
 }
 
 my $config = Config::Tiny->new;
@@ -83,12 +89,6 @@ else {
     close($fh);
 
     die "Session ID mismatch\n" unless $params{session} eq $session;
-}
-
-my @missing_params = grep { not defined $params{$_} && length $params{$_} } @params;
-if (@missing_params) {
-    my $missing_params = join ', ', map "'$_'", @missing_params;
-    die "Incomplete query: param(s) $missing_params missing or not defined\n";
 }
 
 my %access;

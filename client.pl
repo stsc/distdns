@@ -32,7 +32,7 @@ use LWP::UserAgent;
 use Sys::Hostname qw(hostname);
 use Tie::File;
 
-my $VERSION = '0.05';
+my $VERSION = '0.06';
 
 my $conf_file = catfile($Bin, 'client.conf');
 
