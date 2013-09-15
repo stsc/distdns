@@ -24,6 +24,7 @@ machines.
  -d, --debug    server debugging
  -h, --help     this help screen
  -i, --init     initialize session data
+ -l, --list     list remote entries
 
 =over 4
 
@@ -38,6 +39,10 @@ Show usage screen.
 =item * C<-i, --init>
 
 Initialize session data prior to using client/server script regularly.
+
+=item * C<-l, --list>
+
+List remote JSON entries.
 
 =back
 

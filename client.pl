@@ -45,12 +45,13 @@ Usage: $0
     -d, --debug    server debugging
     -h, --help     this help screen
     -i, --init     initialize session data
+    -l, --list     list remote entries
 USAGE
     exit;
 }
 
 my %opts;
-GetOptions(\%opts, qw(d|debug h|help i|init)) or usage();
+GetOptions(\%opts, qw(d|debug h|help i|init l|list)) or usage();
 usage() if $opts{h};
 
 my $config = Config::Tiny->new;
@@ -104,6 +105,7 @@ my %params = (
     name    => $name,
     debug   => $opts{d} || false,
     init    => $opts{i} || false,
+    list    => $opts{l} || false,
     session => $session,
 );
 
@@ -121,6 +123,21 @@ if ($response->is_success) {
     die "$0: [server] $data->{error}" if defined $data->{error};
 
     $save_session->($session) if $opts{i};
+
+    if ($opts{l}) {
+        format STDOUT_TOP =
+IP                 Name               PC                      Netz
+=============================================================================
+.
+        foreach my $entry (sort { $a->{netz} cmp $b->{netz} } @{$data->{entries}}) {
+            format STDOUT =
+@<<<<<<<<<<<<<<    @<<<<<<<<<<<<<<    @<<<<<<<<<<<<<<<<<<<    @<<<<<<<<<<<<<<
+@$entry{qw(ip name pc netz)}
+.
+            write;
+        }
+        exit;
+    }
 
     my %list;
     foreach my $entry (@{$data->{entries}}) {

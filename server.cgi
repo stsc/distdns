@@ -34,7 +34,7 @@ my $conf_file = catfile($Bin, 'server.conf');
 
 my $query = CGI->new;
 
-my @params = qw(netz pc name debug init session);
+my @params = qw(netz pc name debug init list session);
 my %params;
 
 foreach my $param (@params) {
@@ -115,26 +115,34 @@ if (exists $access{$params{name}} && grep /^$params{pc}$/i, @{$access{$params{na
 
     my $data = defined $json && length $json ? decode_json($json) : [];
 
-    for (my $i = 0; $i < @$data; $i++) {
-        if ($params{netz} eq $data->[$i]->{netz}
-         && $params{pc}   eq $data->[$i]->{pc}
-         && $params{name} eq $data->[$i]->{name}) {
-            splice @$data, $i--, 1;
-        }
+    if ($params{list}) {
+        close($fh);
+
+        print $query->header('application/json');
+        print encode_json({ entries => $data, error => undef });
     }
-    push @$data, { map { $_ => $params{$_} } qw(netz pc name ip) };
+    else {
+        for (my $i = 0; $i < @$data; $i++) {
+            if ($params{netz} eq $data->[$i]->{netz}
+             && $params{pc}   eq $data->[$i]->{pc}
+             && $params{name} eq $data->[$i]->{name}) {
+                splice @$data, $i--, 1;
+            }
+        }
+        push @$data, { map { $_ => $params{$_} } qw(netz pc name ip) };
 
-    seek($fh, 0, 0)  or die "Cannot seek to start of $json_file: $!\n";
-    truncate($fh, 0) or die "Cannot truncate $json_file: $!\n";
+        seek($fh, 0, 0)  or die "Cannot seek to start of $json_file: $!\n";
+        truncate($fh, 0) or die "Cannot truncate $json_file: $!\n";
 
-    print {$fh} encode_json($data);
+        print {$fh} encode_json($data);
 
-    close($fh);
+        close($fh);
 
-    my @data = grep $_->{netz} eq $params{netz}, @$data;
+        my @data = grep $_->{netz} eq $params{netz}, @$data;
 
-    print $query->header('application/json');
-    print encode_json({ entries => \@data, error => undef });
+        print $query->header('application/json');
+        print encode_json({ entries => \@data, error => undef });
+    }
 }
 else {
     die "Access not permitted\n";
