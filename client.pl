@@ -61,13 +61,13 @@ my $get_config_opts = sub
 {
     my ($section, $options) = @_;
 
-    _die "Section $section missing in $conf_file\n" unless exists $config->{$section};
+    _die "Section '$section' missing in $conf_file\n" unless exists $config->{$section};
 
     my %options;
     @options{@$options} = @{$config->{$section}}{@$options};
 
     foreach my $option (@$options) {
-        _die "Option $option not set in $conf_file\n" unless defined $options{$option} && length $options{$option};
+        _die "Option '$option' not set in $conf_file\n" unless defined $options{$option} && length $options{$option};
     }
 
     return @options{@$options};

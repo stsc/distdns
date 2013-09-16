@@ -62,7 +62,7 @@ my $config = Config::Tiny->new;
 
 my $section = 'path';
 
-die "Section $section missing in $conf_file\n" unless exists $config->{$section};
+die "Section '$section' missing in $conf_file\n" unless exists $config->{$section};
 
 my @options = qw(json_file session_file);
 
@@ -70,7 +70,7 @@ my %options;
 @options{@options} = @{$config->{$section}}{@options};
 
 foreach my $option (@options) {
-    die "Option $option not set in $conf_file\n" unless defined $options{$option} && length $options{$option};
+    die "Option '$option' not set in $conf_file\n" unless defined $options{$option} && length $options{$option};
 }
 
 my ($json_file, $session_file) = map rel2abs($options{$_}, $Bin), @options;
