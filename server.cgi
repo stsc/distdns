@@ -81,6 +81,10 @@ if ($params{init}) {
     open(my $fh, '>', $session_file) or die "Cannot open $session_file for writing: $!\n";
     print {$fh} "$params{session}\n";
     close($fh);
+
+    print $query->header('application/json');
+    print encode_json({ entries => [], error => undef });
+    exit;
 }
 else {
     open(my $fh, '<', $session_file) or die "Cannot open $session_file for reading: $!\nPerhaps try running --init\n";

@@ -40,8 +40,9 @@ sub _die { die "$0: [client] $_[0]" }
 
 sub usage
 {
+    warn "$_[0]\n" if defined $_[0];
     print <<"USAGE";
-Usage: $0
+Usage: $0 [options]
     -d, --debug    server debugging
     -h, --help     this help screen
     -i, --init     initialize session data
@@ -53,6 +54,8 @@ USAGE
 my %opts;
 GetOptions(\%opts, qw(d|debug h|help i|init l|list)) or usage();
 usage() if $opts{h};
+
+usage('Cannot combine --init and --list') if $opts{i} && $opts{l};
 
 my $config = Config::Tiny->new;
    $config = Config::Tiny->read($conf_file);
@@ -122,9 +125,10 @@ if ($response->is_success) {
 
     die "$0: [server] $data->{error}" if defined $data->{error};
 
-    $save_session->($session) if $opts{i};
-
-    if ($opts{l}) {
+    if ($opts{i}) {
+        $save_session->($session);
+    }
+    elsif ($opts{l}) {
         format STDOUT_TOP =
 IP                 Name               PC                      Netz
 =============================================================================
@@ -136,37 +140,37 @@ IP                 Name               PC                      Netz
 .
             write;
         }
-        exit;
     }
+    else {
+        my %list;
+        foreach my $entry (@{$data->{entries}}) {
+            my $host = "$entry->{ip}\t" . join '.', @$entry{qw(name pc netz)};
+            push @{$list{$entry->{netz}}}, $host;
+        }
 
-    my %list;
-    foreach my $entry (@{$data->{entries}}) {
-        my $host = "$entry->{ip}\t" . join '.', @$entry{qw(name pc netz)};
-        push @{$list{$entry->{netz}}}, $host;
-    }
+        my $o = tie my @hosts, 'Tie::File', $hosts_file or _die "Cannot tie $hosts_file: $!\n";
+        $o->flock(LOCK_EX);
 
-    my $o = tie my @hosts, 'Tie::File', $hosts_file or _die "Cannot tie $hosts_file: $!\n";
-    $o->flock(LOCK_EX);
-
-    foreach my $network (keys %list) {
-        my %indexes;
-        for (my $i = 0; $i < @hosts; $i++) {
-            if ($hosts[$i] =~ /^\#$network\#$/i) {
-                $indexes{start} = $i;
-            }
-            elsif (exists $indexes{start} && $hosts[$i] =~ /^\#\/$network\#$/i) {
-                $indexes{end} = $i;
-                my $count = ($indexes{end} - $indexes{start} > 1)
-                  ? $indexes{end} - $indexes{start} - 1
-                  : 0;
-                splice @hosts, $indexes{start} + 1, $count, @{$list{$network}};
-                last;
+        foreach my $network (keys %list) {
+            my %indexes;
+            for (my $i = 0; $i < @hosts; $i++) {
+                if ($hosts[$i] =~ /^\#$network\#$/i) {
+                    $indexes{start} = $i;
+                }
+                elsif (exists $indexes{start} && $hosts[$i] =~ /^\#\/$network\#$/i) {
+                    $indexes{end} = $i;
+                    my $count = ($indexes{end} - $indexes{start} > 1)
+                      ? $indexes{end} - $indexes{start} - 1
+                      : 0;
+                    splice @hosts, $indexes{start} + 1, $count, @{$list{$network}};
+                    last;
+                }
             }
         }
-    }
 
-    undef $o;
-    untie @hosts;
+        undef $o;
+        untie @hosts;
+    }
 }
 else {
     warn $response->status_line, "\n";
