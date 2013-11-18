@@ -134,6 +134,7 @@ if (exists $access{$params{name}} && grep /^$params{pc}$/i, @{$access{$params{na
             }
         }
         push @$data, { map { $_ => $params{$_} } qw(netz pc name ip) };
+        $data->[-1]->{time} = time;
 
         seek($fh, 0, 0)  or die "Cannot seek to start of $json_file: $!\n";
         truncate($fh, 0) or die "Cannot truncate $json_file: $!\n";

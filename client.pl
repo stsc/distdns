@@ -29,6 +29,7 @@ use FindBin qw($Bin);
 use Getopt::Long qw(:config no_auto_abbrev no_ignore_case);
 use JSON qw(decode_json);
 use LWP::UserAgent;
+use POSIX qw(strftime);
 use Sys::Hostname qw(hostname);
 use Tie::File;
 
@@ -130,13 +131,14 @@ if ($response->is_success) {
     }
     elsif ($opts{l}) {
         format STDOUT_TOP =
-IP                 Name               PC                      Netz
-=============================================================================
+IP                 Name               PC                      Netz               Aktualisiert
+====================================================================================================
 .
         foreach my $entry (sort { $a->{netz} cmp $b->{netz} } @{$data->{entries}}) {
+            my $updated = strftime '%Y-%m-%d %H:%M:%S', localtime $entry->{time};
             format STDOUT =
-@<<<<<<<<<<<<<<    @<<<<<<<<<<<<<<    @<<<<<<<<<<<<<<<<<<<    @<<<<<<<<<<<<<<
-@$entry{qw(ip name pc netz)}
+@<<<<<<<<<<<<<<    @<<<<<<<<<<<<<<    @<<<<<<<<<<<<<<<<<<<    @<<<<<<<<<<<<<<    @<<<<<<<<<<<<<<<<<<
+@$entry{qw(ip name pc netz)}, $updated
 .
             write;
         }
