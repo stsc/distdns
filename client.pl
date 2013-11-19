@@ -94,8 +94,7 @@ my $save_session = sub
 my $get_session = sub
 {
     open(my $fh, '<', $session_file) or _die "Cannot open $session_file for reading: $!\nPerhaps try running --init\n";
-    my $session = do { local $/; <$fh> };
-    chomp $session;
+    chomp(my $session = <$fh>);
     close($fh);
 
     return $session;

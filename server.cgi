@@ -88,8 +88,7 @@ if ($params{init}) {
 }
 else {
     open(my $fh, '<', $session_file) or die "Cannot open $session_file for reading: $!\nPerhaps try running --init\n";
-    my $session = do { local $/; <$fh> };
-    chomp $session;
+    chomp(my $session = <$fh>);
     close($fh);
 
     die "Session ID mismatch\n" unless $params{session} eq $session;
