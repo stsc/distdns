@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (c) 2013 Michel Ketterle, Steven Schubiger
+# Copyright (c) 2015 Michel Ketterle, Steven Schubiger
 #
 # This file is part of distdns.
 #
@@ -21,19 +21,41 @@ use strict;
 use warnings;
 use constant false => 0;
 
-use Config::Tiny;
-use Digest::MD5 qw(md5_hex);
-use Fcntl ':flock';
-use File::Spec::Functions qw(catfile rel2abs);
-use FindBin qw($Bin);
-use Getopt::Long qw(:config no_auto_abbrev no_ignore_case);
-use JSON qw(decode_json);
-use LWP::UserAgent;
-use POSIX qw(strftime);
-use Sys::Hostname qw(hostname);
-use Tie::File;
+BEGIN
+{
+    my @modules = (
+        [ 'Config::Tiny',          [                                           ] ],
+        [ 'Digest::MD5',           [ qw(md5_hex)                               ] ],
+        [ 'Fcntl',                 [ qw(:flock)                                ] ],
+        [ 'File::Spec::Functions', [ qw(catfile rel2abs)                       ] ],
+        [ 'FindBin',               [ qw($Bin)                                  ] ],
+        [ 'Getopt::Long',          [ qw(:config no_auto_abbrev no_ignore_case) ] ],
+        [ 'JSON',                  [ qw(decode_json)                           ] ],
+        [ 'LWP::UserAgent',        [                                           ] ],
+        [ 'POSIX',                 [ qw(strftime)                              ] ],
+        [ 'Sys::Hostname',         [ qw(hostname)                              ] ],
+        [ 'Tie::File',             [                                           ] ],
+    );
+    my (@missing, @import);
+    foreach my $module (@modules) {
+        unless (eval "require $module->[0]; 1") {
+            push @missing, $module->[0];
+            next;
+        }
+        unless (eval { $module->[0]->import(@{$module->[1]}); 1 }) {
+            push @import, $module->[0];
+        }
+    }
+    if (@missing || @import) {
+        warn <<"EOT";
+Modules missing: @missing
+Import failures: @import
+EOT
+        exit 1;
+    }
+}
 
-my $VERSION = '0.06';
+my $VERSION = '0.07';
 
 my $conf_file = catfile($Bin, 'client.conf');
 
