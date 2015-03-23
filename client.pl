@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (c) 2015 Michel Ketterle, Steven Schubiger
+# Copyright (c) 2013, 2015 Michel Ketterle, Steven Schubiger
 #
 # This file is part of distdns.
 #
